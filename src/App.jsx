@@ -1,16 +1,19 @@
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import HomePage from "./page/HomePage";
-import ViewPostPage from "./page/ViewPostPage";
+const HomePage = lazy(() => import("./page/HomePage"));
+const ViewPostPage = lazy(() => import("./page/ViewPostPage"));
 import { Toaster } from "@/components/ui/sonner";
 
 function App() {
   return (
     <div className="App">
       <Router>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/post/:postId" element={<ViewPostPage />} />
-        </Routes>
+        <Suspense fallback={<div />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/post/:postId" element={<ViewPostPage />} />
+          </Routes>
+        </Suspense>
       </Router>
       <Toaster
         toastOptions={{
