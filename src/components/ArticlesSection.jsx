@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import authorImage from "../assets/author-image.jpeg";
 import {
@@ -11,45 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-function BlogCard({ image, category, title, description, author, date }) {
-  return (
-    <div className="flex flex-col gap-4">
-      <a href="#" className="relative h-[212px] sm:h-[360px]">
-        <img
-          className="w-full h-full object-cover rounded-md"
-          src={image}
-          alt={title}
-        />
-      </a>
-      <div className="flex flex-col">
-        <div className="flex">
-          <span className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600 mb-2">
-            {category}
-          </span>
-        </div>
-        <a href="#">
-          <h2 className="font-bold text-xl mb-2 line-clamp-2 hover:underline">
-            {title}
-          </h2>
-        </a>
-        <p className="text-muted-foreground text-sm mb-4 flex-grow line-clamp-3">
-          {description}
-        </p>
-        <div className="flex items-center text-sm">
-          <img
-            className="w-8 h-8 rounded-full mr-2"
-            src={authorImage}
-            alt={author}
-          />
-          <span>{author}</span>
-          <span className="mx-2 text-gray-300">|</span>
-          <span>{date}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { useNavigate } from "react-router-dom";
 
 export default function Articles() {
   const categories = ["Highlight", "Cat", "Inspiration", "General"];
@@ -64,7 +26,9 @@ export default function Articles() {
     const fetchPosts = async () => {
       try {
         const response = await axios.get(
-          `https://blog-post-project-api.vercel.app/posts?page=${page}&limit=6&category=${category}`
+          `https://blog-post-project-api.vercel.app/posts?page=${page}&limit=6&${
+            category !== "Highlight" ? `&category=${category}` : ""
+          }`
         );
         setPosts((prevPosts) => [...prevPosts, ...response.data.posts]);
         setIsLoading(false); // Set isLoading to false after fetching
@@ -85,7 +49,7 @@ export default function Articles() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto md:px-6 lg:px-8 mb-40">
+    <div className="w-full max-w-7xl mx-auto md:px-6 lg:px-8 mb-20">
       <h2 className="text-xl font-bold mb-4 px-4">Latest articles</h2>
       <div className="bg-[#EFEEEB] px-4 py-4 md:py-3 md:rounded-sm flex flex-col space-y-4 md:gap-16 md:flex-row-reverse md:items-center md:space-y-0 md:justify-between mb-10">
         <div className="w-full md:max-w-sm">
@@ -125,6 +89,7 @@ export default function Articles() {
         <div className="hidden md:flex space-x-2">
           {categories.map((cat) => (
             <button
+              disabled={category === cat}
               key={cat}
               onClick={() => {
                 setCategory(cat);
@@ -146,6 +111,7 @@ export default function Articles() {
           return (
             <BlogCard
               key={index}
+              id={blog.id}
               image={blog.image}
               category={blog.category}
               title={blog.title}
@@ -161,15 +127,68 @@ export default function Articles() {
         })}
       </article>
       {hasMore && (
-        <div className="text-center mt-8">
+        <div className="text-center mt-20">
           <button
             onClick={handleLoadMore}
-            className="hover:text-muted-foreground font-medium underline"
+            className={`font-medium ${
+              !isLoading ? "underline hover:text-muted-foreground" : ""
+            }`}
+            disabled={isLoading}
           >
-            {isLoading ? "Loading..." : "View more"}
+            {isLoading ? (
+              <div className="flex flex-col items-center min-h-lvh">
+                <Loader2 className="w-12 h-12 animate-spin text-foreground" />
+                <p className="mt-4">Loading...</p>
+              </div>
+            ) : (
+              "View more"
+            )}
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function BlogCard({ id, image, category, title, description, author, date }) {
+  const navigate = useNavigate();
+  return (
+    <div className="flex flex-col gap-4">
+      <button
+        onClick={() => navigate(`/post/${id}`)}
+        className="relative h-[212px] sm:h-[360px]"
+      >
+        <img
+          className="w-full h-full object-cover rounded-md"
+          src={image}
+          alt={title}
+        />
+      </button>
+      <div className="flex flex-col">
+        <div className="flex">
+          <span className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600 mb-2">
+            {category}
+          </span>
+        </div>
+        <button onClick={() => navigate(`/post/${id}`)}>
+          <h2 className="text-start font-bold text-xl mb-2 line-clamp-2 hover:underline">
+            {title}
+          </h2>
+        </button>
+        <p className="text-muted-foreground text-sm mb-4 flex-grow line-clamp-3">
+          {description}
+        </p>
+        <div className="flex items-center text-sm">
+          <img
+            className="w-8 h-8 rounded-full mr-2"
+            src={authorImage}
+            alt={author}
+          />
+          <span>{author}</span>
+          <span className="mx-2 text-gray-300">|</span>
+          <span>{date}</span>
+        </div>
+      </div>
     </div>
   );
 }
